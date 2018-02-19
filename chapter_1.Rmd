@@ -38,3 +38,91 @@ summary(lm(length ~ 0 + hours, data = df1))$coefficients
 ## Exercise 2
 
 The linear model $y_i = \beta + \epsilon_i$ does not depend on the $x_i$, so $\beta = \bar y$.
+
+## Exercise 3
+
+Using linearity of $\mathbb E$, we can show that $\hat \beta$ is unbiased:
+
+$$
+\begin{align}
+  \mathbb E (\hat\beta)
+  &=
+  \mathbb E ( (X^T X)^{-1} X^T \hat y)
+  \\
+  &=
+  (X^T X)^{-1} X^T \mathbb E (\hat y)
+  \\
+  &=
+  (X^T X)^{-1} X^T \mathbb E (X \beta + \epsilon)
+  \\
+  &=
+  (X^T X)^{-1} X^T (X \beta + \mathbb E (\epsilon))
+  \\
+  &=
+  (X^T X)^{-1} X^T X \beta
+  \\
+  &=
+  \beta.
+\end{align}
+$$
+
+This derivation does not depend on
+
+1. independence of $Y_i$;
+2. homoscedasticity of $Y_i$; or
+3. normality of $Y_i$.
+
+## Exercise 4
+
+a. The model $y_{ij} = \alpha + \beta_i + \epsilon_{ij}$ can be written as $y_{ij} = X_{ji} \beta_i + \epsilon_{ij}$, where
+
+$$
+X
+=
+\begin{pmatrix}
+  1 & 0 & 0 \\
+  1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & 1 \\
+  0 & 0 & 1
+\end{pmatrix}
+,
+\qquad
+\beta
+=
+\begin{pmatrix}
+  \beta_1 \\
+  \beta_2 \\
+  \beta_3
+\end{pmatrix}
+$$
+
+and $i = 1, 2, 3$ and $j = 1, 2$. The columns of $X$ are clearly linearly independent and the model is therefore identifiable.
+
+b. The model $y_{ij} = \alpha + \beta_i + \gamma_j + \epsilon_{ij}$ can be written as $y_{ij} = X_{ji} b_i + \epsilon_{ij}$, where $\alpha = 0$ and
+
+$$
+X 
+=
+\begin{pmatrix}
+  1 & 1 & 0 & 1 & 0 & 0 \\
+  1 & 1 & 0 & 0 & 1 & 0 \\
+  1 & 1 & 0 & 0 & 0 & 1 \\
+  1 & 0 & 1 & 1 & 0 & 0 \\
+  1 & 0 & 1 & 0 & 1 & 0 \\
+  1 & 0 & 1 & 0 & 0 & 1 
+\end{pmatrix}
+,
+\qquad
+b
+=
+\begin{pmatrix}
+  \alpha \\
+  \beta_2 \\
+  \beta_3 \\
+  \gamma_2 \\
+  \gamma_3 \\
+  \gamma_4 \\
+\end{pmatrix}
+$$
