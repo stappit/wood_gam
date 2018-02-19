@@ -1,0 +1,40 @@
+---
+title: "Chapter 1"
+date: "February 19, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+
+library(tidyverse)
+```
+
+## Exercise 1
+
+First we calculate the average speed manually to verify the results of the subsequent linear models.
+
+```{r}
+df1 <- data.frame(
+  length = c(1, 3, 4, 5), 
+  hours  = c(1, 4, 5, 6)
+)
+
+df1 %>% summarise(mean_speed = mean(length / hours))
+```
+
+This can also be calculated by regressing speed on a constant.
+
+```{r}
+summary(lm(length / hours ~ 1, data = df1))$coefficients
+```
+
+Interestingly, although `speed = length / hours`, regressing length on hours does not give the same result as above.
+
+```{r}
+summary(lm(length ~ 0 + hours, data = df1))$coefficients
+```
+
+## Exercise 2
+
+The linear model $y_i = \beta + \epsilon_i$ does not depend on the $x_i$, so $\beta = \bar y$.
