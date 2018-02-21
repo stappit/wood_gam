@@ -8,6 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
 
 library(tidyverse)
+library(broom)
 ```
 
 ## Exercise 1
@@ -126,3 +127,142 @@ b
   \gamma_4 \\
 \end{pmatrix}
 $$
+
+## Exercise 5
+
+## Exercise 6
+
+We have
+
+$$
+\begin{align}
+  X^T \hat\mu 
+  &=
+  X^T X \hat\beta
+  \\
+  &=
+  X^T X (X^T X)^{-1} X^T y
+  \\
+  &=
+  X^T y
+\end{align}
+$$
+
+from which we can conclude that $\sum_1^n y_i = n \alpha$, where $\alpha$ is the intercept.
+In other words, the intercept, $\alpha = \bar y_i$, is the sample mean.
+
+## Exercise 7
+
+## Exercise 8
+
+Let's start by loadding the `MASS` library and fitting the full model.
+
+```{r}
+library(MASS)
+
+m <- lm(
+  loss ~ 1 + 
+         tens + hard + 
+         I(tens^2) + tens:hard + I(hard^2) + 
+         I(tens^3) + I(tens^2):hard + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+
+mfull <- m
+summary(m)
+```
+
+This has an AIC of `r AIC(m)`. There are no features that are significant ($\alpha = 0.05$) and we try removing the 'least significant' feature: `hard:I(tens^2)`.
+
+```{r}
+m <- lm(
+  loss ~ 1 + 
+         tens + hard + 
+         I(tens^2) + tens:hard + I(hard^2) + 
+         I(tens^3) + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+summary(m)
+```
+
+This has an AIC of `r AIC(m)`. The $R^2$ has increased and some features are now closer to significance. Let's again drop the least significant feature: `hard`.
+
+```{r}
+m <- lm(
+  loss ~ 1 + 
+         tens + 
+         I(tens^2) + tens:hard + I(hard^2) + 
+         I(tens^3) + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+summary(m)
+```
+
+The AIC is now `r AIC(m)`. The $R^2$ has not dropped and two features have become significant. Let's try dropping another feature: `I(hard^2)`.
+
+```{r}
+m <- lm(
+  loss ~ 1 + 
+         tens + 
+         I(tens^2) + tens:hard +
+         I(tens^3) + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+msig <- m
+summary(m)
+```
+
+The AIC is `r AIC(m)`, about 1 higher than the previous model, which is consistent with the intepretation that the dropped feature is noise. There was still no drop in $R^2$ and now every feature is significant. Out of curiosity, we can drop one final feature: `tens`.
+
+```{r}
+m <- lm(
+  loss ~ 1 + 
+         I(tens^2) + tens:hard +
+         I(tens^3) + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+summary(m)
+```
+
+The AIC `r AIC(m)` has increased several units, indicating that we have dropped a decent signal. The $R^2$ has also decreased, so we we keep `tens` in the model.
+
+```{r}
+step(mfull)
+```
+
+```{r}
+maic <- lm(
+  loss ~
+    1 + 
+    tens + hard + 
+    I(tens^2) + tens:hard + I(hard^2) + 
+    I(tens^3) + tens:I(hard^2) + I(hard^3), 
+  data = Rubber
+)
+
+summary(maic)
+```
+
+The model chosen by `step` is more complex than that chosen by significance selection.
+
+```{r}
+resolution <- 100
+hard <- seq(min(Rubber$hard), max(Rubber$hard), length.out = resolution)
+tens <- seq(min(Rubber$tens), max(Rubber$tens), length.out = resolution)
+
+z <- matrix(
+  predict(msig, expand.grid(hard = hard, tens = tens)),
+  nrow = length(hard)
+)
+
+contour(x = hard, y = tens, z = z)
+```
+
+```{r}
+z <- matrix(
+  predict(maic, expand.grid(hard = hard, tens = tens)),
+  nrow = length(hard)
+)
+
+contour(x = hard, y = tens, z = z)
+```
