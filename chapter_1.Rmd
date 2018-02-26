@@ -16,6 +16,11 @@ library(broom)
 We know that distance should increase linearly with time, where zero time corresponds to zero distance. 
 
 ```{r}
+df1 <- data.frame(
+  length = c(1, 3, 4, 5), 
+  hours  = c(1, 4, 5, 6)
+)
+
 summary(lm(length ~ 0 + hours, data = df1))$coefficients
 ```
 
@@ -28,10 +33,6 @@ summary(lm(length / hours ~ 1, data = df1))$coefficients
 This latter model corresponds to the mean speed of each journey.
 
 ```{r}
-df1 <- data.frame(
-  length = c(1, 3, 4, 5), 
-  hours  = c(1, 4, 5, 6)
-)
 
 df1 %>% 
   summarise(
@@ -300,4 +301,133 @@ contour(x = hard, y = tens, z = z)
 ```
 
 ## Exercise 9
+
+```{r}
+m9 <- lm(breaks ~ tension + wool + tension:wool, data = warpbreaks)
+summary(m9)
+```
+
+```{r}
+anova(m9)
+```
+
+```{r}
+interaction.plot(warpbreaks$tension, warpbreaks$wool, warpbreaks$breaks)
+```
+
+## Exercise 10
+
+The scatterplot offers some evidence of a non-linear relationship.
+
+```{r, echo=FALSE}
+cars %>%
+  ggplot(aes(x = speed, y = dist)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(se = FALSE) +
+  geom_smooth(method = 'lm', colour = 'red', se = FALSE) +
+  labs(
+    x = 'Speed (mph)',
+    y = 'Distance (feet)',
+    title = 'Stopping distance as a function of speed',
+    subtitle = 'Loess vs. linear smooths'
+  )
+```
+
+
+```{r}
+m10 <- lm(dist ~ 1 + speed + I(speed^2), data = cars)
+summary(m10)
+```
+
+```{r}
+step(m10)
+```
+
+```{r}
+m10_aic <- lm(dist ~ 1 + I(speed^2), data = cars)
+summary(m10_aic)
+```
+
+```{r}
+m10_pval <- lm(dist ~ 1 + speed, data = cars)
+summary(m10_pval)
+```
+
+Both methods of selection give models with similar performance with respect to $R^2$, AIC, and significance.
+The diagnostic plots are also similar, with the AIC-selected model perhaps having the advantage. One should be careful with the interpretation of either model since distance must be positive but the linear model allows distance to be negative. This is particularly clear with `m10_pval`, which would predict a negative stopping distance for a stationary car. The positive intercept for `m10_aic` is not so problematic since we would expect the intercept to be positive for any positive speed due to reaction time. We interpret the constant of the `m10_aic` model as the distance travelled between receiving the stop signal and actually applying the breaks.
+
+We could also deal with the zero-speed problem by removing the constant.
+
+```{r}
+m10_0 <- lm(dist ~ 0 + speed + I(speed^2), data = cars)
+summary(m10_0)
+```
+
+Now both linear and quadrtic terms are significant, as expected from theoretical considerations. Moreover, `m10_0` has the best AIC score of the three.
+
+```{r}
+AIC(m10_pval, m10_aic, m10_0)
+```
+
+To calculate the reaction time in seconds, we convert distance from feet to miles and time from hours to seconds.
+
+```{r}
+c <- summary(m10_aic)$coefficients[1, 1]
+cars %>%
+  mutate(
+    reaction_seconds = ((c / 5280) / speed) * (60 * 60)
+  ) %>%
+  summarise(mean(reaction_seconds))
+```
+
+```{r}
+c <- summary(m10_0)$coefficients[1, 1]
+cars %>%
+  mutate(
+    reaction_seconds = (c / 5280) * (60 * 60)
+  ) %>%
+  summarise(mean(reaction_seconds))
+```
+
+The above considerations indicate that we should exclude `m10` and `m10_pval` as appropriate models. The remaining models exclude either the contant term (`m10_0`) or the linear term (`m10_aic`) whilst keeping the quadratic term.
+
+## Exercise 11
+
+```{r}
+cars11 <- model.matrix(dist ~ 1 + speed + I(speed^2), cars)
+
+ols <- function(y, X) {
+  d <- qr(X) # the decomposition
+  r <- d$rank
+  Rinv <- backsolve(qr.R(d), diag(1, nrow = r))
+  return(Rinv %*% t(qr.Q(d)) %*% y)
+}
+
+b <- ols(cars$dist, cars11)
+b
+```
+
+```{r}
+m10_summary <- summary(m10)
+m10_summary$coefficients[,1]
+```
+
+```{r}
+residual_variance <- function(y, X) {
+  b <- ols(y, X)
+  r <- y - X %*% b
+  p <- ncol(X)
+  n <- length(y)
+  return(sum(r^2) / (n - p))
+}
+
+v <- residual_variance(cars$dist, cars11)
+se <- sqrt(v)
+c(v, se)
+```
+
+```{r}
+m10_summary$sigma
+```
+
 
