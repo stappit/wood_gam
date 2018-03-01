@@ -42,6 +42,281 @@ $$
 
 where $\rss_0$ is now the residual sum of squares for $\bar y_{.j} = a' + e_j'$.
 
+## Exercise 3
+
+a. The final row of `anova(lm(y ~ 1 + x + a))` would test the hypothesis.
+
+b. We could fit the following two models
+
+```r
+m1 <- lm(y ~ 1 + x + a, data = df)
+dfa <- df %>% 
+  group_by(a) %>%
+  summarise(
+    y = mean(y),
+    x = mean(x)
+  ) 
+m0 <- lm(y ~ x, data = dfa)
+```
+
+then estimate $\beta$ as the coefficient of $x$ in `m0`, and $\sigma_a^2$ as described in the chapter.
+
+## Exercise 4
+
+a.
+
+$$
+\begin{pmatrix}
+  y_{11} \\
+  y_{12} \\
+  y_{21} \\
+  y_{22} \\
+  y_{31} \\
+  y_{32} \\
+  y_{41} \\
+  y_{42}
+\end{pmatrix}
+=
+\begin{pmatrix}
+  1 & x_{11} \\
+  1 & x_{12} \\
+  1 & x_{21} \\
+  1 & x_{22} \\
+  1 & x_{31} \\
+  1 & x_{32} \\
+  1 & x_{41} \\
+  1 & x_{42}
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha \\
+  \beta
+\end{pmatrix}
++
+\begin{pmatrix}
+  1 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 0 & 1 \\
+  0 & 0 & 0 & 1 
+\end{pmatrix}
+\begin{pmatrix}
+  a_1 \\
+  a_2 \\
+  a_3 \\
+  a_4
+\end{pmatrix}
++
+\begin{pmatrix}
+  \epsilon_{11} \\
+  \epsilon_{12} \\
+  \epsilon_{21} \\
+  \epsilon_{22} \\
+  \epsilon_{31} \\
+  \epsilon_{32} \\
+  \epsilon_{41} \\
+  \epsilon_{42}
+\end{pmatrix}
+$$
+
+
+b. There are 2 treatment levels $\alpha$, 4 trees $b$ with 2 per treatment level, and 4 measurements per tree.
+
+$$
+\begin{pmatrix}
+  y_{11} \\
+  y_{12} \\
+  y_{13} \\
+  y_{14} \\
+  y_{21} \\
+  y_{22} \\
+  y_{23} \\
+  y_{24} \\
+  y_{31} \\
+  y_{32} \\
+  y_{33} \\
+  y_{34} \\
+  y_{41} \\
+  y_{42} \\
+  y_{43} \\
+  y_{44}
+\end{pmatrix}
+=
+\begin{pmatrix}
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1 \\
+  0 & 1
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha_0 \\
+  \alpha_1
+\end{pmatrix}
++
+\begin{pmatrix}
+  1 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 1 & 0 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 1 & 0 \\
+  0 & 0 & 0 & 1 \\
+  0 & 0 & 0 & 1 \\
+  0 & 0 & 0 & 1 \\
+  0 & 0 & 0 & 1 
+\end{pmatrix}
+\begin{pmatrix}
+  b_0 \\
+  b_1 \\
+  b_2 \\
+  b_3
+\end{pmatrix}
++
+\begin{pmatrix}
+  \epsilon_{11} \\
+  \epsilon_{12} \\
+  \epsilon_{13} \\
+  \epsilon_{14} \\
+  \epsilon_{21} \\
+  \epsilon_{22} \\
+  \epsilon_{23} \\
+  \epsilon_{24} \\
+  \epsilon_{31} \\
+  \epsilon_{32} \\
+  \epsilon_{33} \\
+  \epsilon_{34} \\
+  \epsilon_{41} \\
+  \epsilon_{42} \\
+  \epsilon_{43} \\
+  \epsilon_{44}
+\end{pmatrix}
+$$
+
+
+
+c.
+
+$$
+\begin{pmatrix}
+  y_{111} \\
+  y_{112} \\
+  y_{113} \\
+  y_{121} \\
+  y_{122} \\
+  y_{123} \\
+  y_{131} \\
+  y_{132} \\
+  y_{133} \\
+  y_{212} \\
+  y_{211} \\
+  y_{212} \\
+  y_{221} \\
+  y_{222} \\
+  y_{221} \\
+  y_{232} \\
+  y_{231} \\
+  y_{232}
+\end{pmatrix}
+=
+\begin{pmatrix}
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 0 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1 \\
+  1 & 1
+\end{pmatrix}
+\begin{pmatrix}
+  \mu \\
+  \alpha_2
+\end{pmatrix}
++
+\begin{pmatrix}
+  1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+  0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+  0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+  0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+  0 & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+  0 & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+  0 & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+  1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+  1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+  1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+  0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+  0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+  0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+  0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 \\
+  0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 \\
+  0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 
+\end{pmatrix}
+\begin{pmatrix}
+  b_1 \\
+  b_2 \\
+  b_3 \\
+  c_{11} \\
+  c_{12} \\
+  c_{23} \\
+  c_{21} \\
+  c_{32} \\
+  c_{33}
+\end{pmatrix}
++
+\begin{pmatrix}
+  \epsilon_{111} \\
+  \epsilon_{112} \\
+  \epsilon_{113} \\
+  \epsilon_{121} \\
+  \epsilon_{122} \\
+  \epsilon_{123} \\
+  \epsilon_{131} \\
+  \epsilon_{132} \\
+  \epsilon_{133} \\
+  \epsilon_{212} \\
+  \epsilon_{211} \\
+  \epsilon_{212} \\
+  \epsilon_{221} \\
+  \epsilon_{222} \\
+  \epsilon_{221} \\
+  \epsilon_{232} \\
+  \epsilon_{231} \\
+  \epsilon_{232}
+\end{pmatrix}
+$$
+
 ## Exercise 5
 
 a. With $\mu := \mathbb E (X + Z) = \mu_X + \mu_Z$ and 
