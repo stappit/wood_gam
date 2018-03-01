@@ -1,0 +1,189 @@
+---
+title: "Chapter 2: Mixed Models"
+author: "Brian Callander"
+date: "February 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(broom)
+```
+
+## Exercise 1
+
+a. The mixed model can be specified as $y_i = \alpha + b_{j[i]} + \epsilon_i$, where $b_{j[i]} \sim \mathcal N (0, \sigma_b^2)$ and $\epsilon_i \sim \mathcal N (0, \sigma^2)$.
+
+b. The `anova` call tests the hypothesis that all $b_{j[i]} = 0$. In the mixed-model setup, this is equivalent to $\sigma_b^2 = 0$.
+
+c. There is strong evidence for between-sow variation, i.e. that $\sigma_b^2 > 0$.
+
+d. An unbiased estimator for between-sow variation is $\hat\sigma_b^2 = \hat\sigma_0^2 - \hat\sigma^2 / J = 0.6351067 - 0.2131667 / 6 = `r 0.6351067 - 0.2131667 / 6`$.
+
+## Exercise 2
+
+
+We have $a = \alpha + J^{-1} \sum_1^J c_j$ and $e_i = b_i + J^{-1} \sum_1^J \epsilon_{ij}$. The errors $e_i$ are mutually independent since the constituent random variables are. Since $\mathbb V (e_i) = \sigma_b^2 + J^{-1} \sigma^2$, we have 
+
+$$
+\newcommand{\rss}{\mathop{RSS}}
+\hat \sigma_b^2 = \frac{\rss_0}{I - 1} - \frac{\hat\sigma^2}{J}
+$$
+
+where $\rss_0$ is the residual sum of squares for $\bar y_{i.} = a + e_i$.
+
+The above argument is symmetric for $\hat\sigma_c^2$, which can be estimated by
+
+$$
+\hat \sigma_c^2 = \frac{\rss_0}{J - 1} - \frac{\hat\sigma^2}{I}
+$$
+
+where $\rss_0$ is now the residual sum of squares for $\bar y_{.j} = a' + e_j'$.
+
+## Exercise 5
+
+a. With $\mu := \mathbb E (X + Z) = \mu_X + \mu_Z$ and 
+
+$$
+\newcommand{\cov}{\mathop{Cov}}
+\begin{align}
+  \cov (X + Z)
+  &=
+  \cov X + \cov Z + \cov (X, Z) \cov (X, Z)^T
+\end{align}
+$$
+  
+it is sufficient to show that $\cov (X, Z) = 0$. Since $X, Z$ are independent, it follows that $\mathbb E (XZ^T) = \mathbb E X \mathbb E Z^T = \mu_X \mu_Z^T$. Therefore,
+
+$$
+\begin{align}
+  \cov (X, Z)
+  &=
+  \mathbb E \left( (X - \mu_X) (Z - \mu_Z)^T \right)
+  \\
+  &=
+  \mathbb E \left( XZ^T + \mu_X \mu_Z^T - X\mu_Z^T - \mu_X Z^T \right)
+  \\
+  &=
+  \mu_X \mu_Z^T + \mu_X \mu_Z^T - \mu_X \mu_Z^T - \mu_X \mu_Z^T 
+  \\
+  &=
+  0
+\end{align}
+$$
+
+b. The matrix form of the model is
+
+$$
+\begin{pmatrix}
+  y_{11} \\
+  y_{12} \\
+  y_{13} \\
+  y_{21} \\
+  y_{22} \\
+  y_{23} \\
+  y_{31} \\
+  y_{32} \\
+  y_{33}
+\end{pmatrix}
+=
+\begin{pmatrix}
+  1 & x_{11} \\
+  1 & x_{12} \\
+  1 & x_{13} \\
+  1 & x_{21} \\
+  1 & x_{22} \\
+  1 & x_{23} \\
+  1 & x_{31} \\
+  1 & x_{32} \\
+  1 & x_{33}
+\end{pmatrix}
+\begin{pmatrix}
+  \alpha \\
+  \beta
+\end{pmatrix}
++
+\begin{pmatrix}
+  1 & 0 & 0 \\
+  1 & 0 & 0 \\
+  1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 1 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & 1 \\
+  0 & 0 & 1 \\
+  0 & 0 & 1
+\end{pmatrix}
+\begin{pmatrix}
+  b_1 \\
+  b_2 \\
+  b_3
+\end{pmatrix}
++
+\begin{pmatrix}
+  \epsilon_{11} \\
+  \epsilon_{12} \\
+  \epsilon_{13} \\
+  \epsilon_{21} \\
+  \epsilon_{22} \\
+  \epsilon_{23} \\
+  \epsilon_{31} \\
+  \epsilon_{32} \\
+  \epsilon_{33}
+\end{pmatrix}
+$$
+
+$$
+\begin{align}
+  \cov y
+  &=
+  \cov (Zb + \epsilon)
+  \\
+  &=
+  \cov (Zb) + \cov \epsilon
+  \\
+  &=
+  Z\cov (b) Z^T + \sigma^2
+  \\
+  &=
+  \sigma_b^2 ZZ^T + \sigma^2
+\end{align}
+$$
+
+
+$$
+ZZ^T
+=
+\begin{pmatrix}
+  1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+  1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+  1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+  0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+  0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 
+\end{pmatrix}
+$$
+
+$$
+\cov y
+=
+\begin{pmatrix}
+  \sigma_b^2 + \sigma & \sigma_b^2 & \sigma_b^2   & 0 & 0 & 0 & 0 & 0 & 0 \\
+  \sigma_b^2 & \sigma_b^2 + \sigma^2 & \sigma_b^2 & 0 & 0 & 0 & 0 & 0 & 0 \\
+  \sigma_b^2 & \sigma_b^2 & \sigma_b^2 + \sigma^2 & 0 & 0 & 0 & 0 & 0 & 0 \\
+  0 & 0 & 0 & \sigma_b^2 + \sigma & \sigma_b^2 & \sigma_b^2   & 0 & 0 & 0 \\
+  0 & 0 & 0 & \sigma_b^2 & \sigma_b^2 + \sigma^2 & \sigma_b^2 & 0 & 0 & 0 \\
+  0 & 0 & 0 & \sigma_b^2 & \sigma_b^2 & \sigma_b^2 + \sigma^2 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 0 & 0 & 0 & \sigma_b^2 + \sigma & \sigma_b^2 & \sigma_b^2   \\
+  0 & 0 & 0 & 0 & 0 & 0 & \sigma_b^2 & \sigma_b^2 + \sigma^2 & \sigma_b^2 \\
+  0 & 0 & 0 & 0 & 0 & 0 & \sigma_b^2 & \sigma_b^2 & \sigma_b^2 + \sigma^2 
+\end{pmatrix}
+$$
+
+
+
