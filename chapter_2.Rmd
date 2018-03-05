@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, comment = NA, warning = FALSE, message = FALSE)
 
 library(tidyverse)
+library(nlme)
 library(broom)
 ```
 
@@ -461,4 +462,67 @@ $$
 $$
 
 
+## Exercise 9
 
+Both `Method` and `Physique` are fixed effects since we could expect these to have systemic effects on `rounds`. The factor `Team` is a random effect because repeating the experiment with different teams could lead to different results.
+
+A suitable starting model includes the interactions of the fixed effects. The anova shows that `Method` has a significant effect, but neither `Physique` nor the interaction term are significant.
+
+```{r}
+m <- lme(rounds ~ Method * Physique, data = Gun, ~1 | Team)
+anova(m)
+```
+
+The `Physique` factor is still insignifiant after removing the interaction term.
+
+```{r}
+m1 <- lme(rounds ~ Method + Physique, data = Gun, ~1 | Team)
+anova(m1, m)
+```
+
+Removing `Physique` altogether yields the best results.
+
+```{r}
+m2 <- lme(rounds ~ Method, data = Gun, ~1 | Team)
+anova(m2, m1)
+```
+
+The diagnistics are mostly satisfactory. There is some evidence that `M2` has higher variance than `M1` and the random effects are not quite normal.
+
+```{r}
+diagnostic <- augment(m2) %>%
+  mutate(
+    .resid_student = residuals(m2, type = 'pearson', scaled = TRUE),
+    .random = .fitted - .fixed
+  )
+
+diagnostic %>%
+  ggplot(aes(.fitted, .resid, colour = Method)) +
+  geom_point() 
+  #geom_smooth(se = FALSE, colour = "black")
+
+diagnostic %>%
+  ggplot(aes(y = sqrt(abs(.resid_student)), x = .fitted, colour = Method)) +
+  geom_point() +
+  geom_smooth(se = FALSE, colour = "black", formula = y ~ x)
+
+diagnostic %>%
+  ggplot(aes(sample = .resid_student)) +
+  geom_point(stat = 'qq') +
+  geom_abline()
+
+ranef(m2) %>%
+  ggplot(aes(sample = `(Intercept)`)) +
+  geom_point(stat = 'qq') +
+  geom_abline()
+```
+
+The summary tells us that between-team variance is fairly small, smaller than within-team variance, which in turn is a smaller than the estimated effect size.
+
+```{r}
+summary(m2)
+```
+
+```{r}
+intervals(m2)
+```
