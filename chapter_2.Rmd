@@ -9,8 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, comment = NA, warning = FALSE, message = FALSE)
 
 library(tidyverse)
-library(nlme)
 library(broom)
+library(lme4)
+library(nlme)
 ```
 
 ## Exercise 1
@@ -461,6 +462,97 @@ $$
 \end{pmatrix}
 $$
 
+
+## Exercise 6
+
+The `Source` should be modelled as a fixed effect since this is the main factor of interest. Since `Site` is suspected to have a systemic effect, this can also be moddeled as a fixed effect. We model `Lot` and `Wafer` as nested random effects to account for additional variation.
+
+### EDA
+
+```{r}
+Oxide %>%
+  ggplot(aes(Thickness, fill = Source)) +
+  geom_density(alpha = 0.3)
+#lm(Thickness ~ Source, data = Oxide)
+```
+
+
+```{r}
+Oxide %>%
+  ggplot(aes(Thickness, fill = Site)) +
+  geom_density(alpha = 0.3)
+```
+
+### No random effects
+
+For comparison with the mixed-effect models below, we check here what we can conclude without any random effects. The most basic linear model suggests that there is a significant `Source` effect, but there is insufficient evidence to suggest any systematic `Site` effect.
+
+```{r}
+m00 <- lm(Thickness ~ 0 + Source, data = Oxide)
+m01 <- lm(Thickness ~ 0 + Source + Site, data = Oxide)
+anova(m01)
+```
+
+```{r}
+summary(m00)
+```
+
+There seems to be an increase in variance from site 1 to site 2, but there's otherwise no indication of problems with the model assumptions. 
+
+```{r}
+plot(m00)
+```
+
+### Mixed-effects
+
+The full model with random effects is as follows.
+
+```{r}
+ctrl <- lmeControl(niterEM = 500, msMaxIter = 100)
+options(contrasts = c("contr.treatment", "contr.treatment"))
+
+m1 <- lme(Thickness ~ Source + Site, data = Oxide, ~ 1 | Lot/Wafer, control = ctrl)
+summary(m1)
+```
+
+Neither MLE nor AIC indicate that `Site` has a systemic effect, so we can drop it from our model.
+
+```{r}
+m2 <- lme(Thickness ~ Source, data = Oxide, ~ 1 | Lot/Wafer, control = ctrl)
+anova(m2, m1)
+```
+
+There is no strong evidence that any model assumptions have been violated.
+
+```{r}
+plot(m2)
+plot(m2, Thickness ~ resid(.))
+qqnorm(m2, ~ resid(.))
+```
+
+The random effects also look normal.
+
+```{r}
+qqnorm(m2, ~ranef(., level=1))
+qqnorm(m2, ~ranef(., level=2))
+```
+
+There is insufficient evidence to reject the hypothesis that there is a systematic difference between the two sources. Any difference that might exist would by masked by the large variance between lots.
+
+```{r}
+summary(m2)
+```
+
+
+We can compare the model `m2` with the equivalent model without any random effects. There is strong evidence of both a `Lot` and `Wafer` random effect.
+
+```{r}
+m0 <- lme(Thickness ~ Source, data = Oxide)
+m3 <- lme(Thickness ~ Source, data = Oxide, ~ 1 | Lot)
+anova(m0, m3, m2)
+```
+
+I am unsure why `m0` would have 9 degrees of freedom. Since it uses only one binary factor and a constant, it should have 2 degrees of freedom.
 
 ## Exercise 9
 
